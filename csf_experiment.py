@@ -1,9 +1,8 @@
 
 # Spatial Frequency Sensitivity Experiment (Contrast Sensitivity Function)
 # Python / PsychoPy implementation
-print("RUNNING THIS FILE:", __file__)
 
-from psychopy import visual, core, event, data
+from psychopy import visual, core, event, data, monitors
 import numpy as np
 import csv
 import os
@@ -11,6 +10,12 @@ import os
 # =====================
 # Experiment Parameters
 # =====================
+mon = monitors.Monitor(
+    name='testMonitor',
+    width=53.0,        # physical screen width in cm (CHANGE THIS)
+    distance=57.0      # viewing distance in cm (CHANGE THIS)
+)
+
 spatial_freqs = [0.5, 1, 2, 4, 8]  # cycles per degree
 contrasts = np.linspace(0.01, 0.5, 9)
 trials_per_condition = 10
@@ -21,7 +26,13 @@ os.makedirs('data', exist_ok=True)
 # =====================
 # Window Setup
 # =====================
-win = visual.Window(size=(1024, 768), units='deg', fullscr=False, color=0)
+win = visual.Window(
+    size=(1024, 768),
+    monitor=mon,
+    units='deg',
+    fullscr=False,
+    color=0
+)
 
 # =====================
 # Stimuli
