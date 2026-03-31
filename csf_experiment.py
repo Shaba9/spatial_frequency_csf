@@ -15,16 +15,15 @@ mon = monitors.Monitor(
     width=53.0,        # physical screen width in cm (CHANGE THIS)
     distance=57.0      # viewing distance in cm (CHANGE THIS)
 )
-
-spatial_freqs = [0.5, 1, 2, 4, 8]  # cycles per degree
-contrasts = np.linspace(0.01, 0.5, 9)
-trials_per_condition = 10
+spatial_freqs = [1, 2, 4]          # cycles per degree
+contrasts = [0.05, 0.1, 0.2, 0.4] # contrast levels
+trials_per_condition = 3
 
 # Create output directory
-os.makedirs('data', exist_ok=True)
+os.makedirs("data", exist_ok=True)
 
 # =====================
-# Window Setup
+# Window
 # =====================
 win = visual.Window(
     size=(1024, 768),
@@ -33,25 +32,26 @@ win = visual.Window(
     fullscr=False,
     color=0
 )
+fixation = visual.TextStim(win, "+", color="white", height=0.5)
+progress_text = visual.TextStim(win, "", pos=(0, -6), height=0.6)
 
-# =====================
-# Stimuli
-# =====================
-fixation = visual.TextStim(win, text='+', height=0.5, color='white')
-
-instruction_text = visual.TextStim(
+instructions = visual.TextStim(
     win,
-    text='Two intervals will appear. One contains a striped pattern. Press LEFT if the pattern was first. Press RIGHT if the pattern was second. Press SPACE to begin.',
-    wrapWidth=20,
-    color='white'
+    text="Two intervals will appear.\n"
+         "One contains faint stripes.\n\n"
+         "LEFT = first interval\n"
+         "RIGHT = second interval\n\n"
+         "Press SPACE to begin.",
+    wrapWidth=25,
+    color="white"
 )
 
 # =====================
-# Instructions Screen
+# Instructions
 # =====================
-instruction_text.draw()
+instructions.draw()
 win.flip()
-event.waitKeys(keyList=['space'])
+event.waitKeys(keyList=["space"])
 
 # =====================
 # Trial List
@@ -60,73 +60,84 @@ trials = []
 for sf in spatial_freqs:
     for c in contrasts:
         for _ in range(trials_per_condition):
-            trials.append({'spatial_freq': sf, 'contrast': c})
+            trials.append({"sf": sf, "contrast": c})
 
 np.random.shuffle(trials)
 
 # =====================
 # Data File
 # =====================
-data_file = open('data/results.csv', 'w', newline='')
+data_file = open("data/results.csv", "w", newline="")
 writer = csv.writer(data_file)
-writer.writerow(['spatial_freq', 'contrast', 'correct'])
+writer.writerow(["spatial_freq", "contrast", "correct"])
+
+total_trials = len(trials)
 
 # =====================
 # Experiment Loop
 # =====================
-clock = core.Clock()
-
-for trial in trials:
-    sf = trial['spatial_freq']
-    contrast = trial['contrast']
+for i, trial in enumerate(trials):
+    sf = trial["sf"]
+    contrast = trial["contrast"]
 
     grating = visual.GratingStim(
         win,
-        tex='sin',
-        mask='gauss',
+        tex="sin",
         sf=sf,
         contrast=contrast,
-        size=8
+        size=8,
+        mask="gauss"
     )
 
     correct_interval = np.random.choice([0, 1])
 
-    # First interval
+    # Fixation
     fixation.draw()
+    progress_text.text = f"Trial {i+1} / {total_trials}"
+    progress_text.draw()
     win.flip()
-    core.wait(0.5)
+    core.wait(0.4)
+
+    # Interval 1
     if correct_interval == 0:
         grating.draw()
     win.flip()
-    core.wait(0.5)
+    core.wait(0.4)
 
     win.flip()
-    core.wait(0.3)
+    core.wait(0.2)
 
-    # Second interval
-    fixation.draw()
-    win.flip()
-    core.wait(0.5)
+    # Interval 2
     if correct_interval == 1:
         grating.draw()
     win.flip()
-    core.wait(0.5)
+    core.wait(0.4)
 
     win.flip()
 
     # Response
-    keys = event.waitKeys(keyList=['left', 'right', 'escape'])
-    if 'escape' in keys:
+    keys = event.waitKeys(keyList=["left", "right", "escape"])
+    if "escape" in keys:
         break
 
-    response = 0 if keys[0] == 'left' else 1
+    response = 0 if keys[0] == "left" else 1
     correct = int(response == correct_interval)
 
     writer.writerow([sf, contrast, correct])
 
 # =====================
-# Cleanup
+# Ending Screen
 # =====================
+end_text = visual.TextStim(
+    win,
+    text="Experiment complete.\n\nThank you!",
+    height=1,
+    color="white"
+)
+end_text.draw()
+win.flip()
+core.wait(3)
+
 data_file.close()
 win.close()
 core.quit()
