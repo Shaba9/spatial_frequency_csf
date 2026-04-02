@@ -22,6 +22,9 @@ This experiment measures visual contrast sensitivity across spatial frequencies.
 
 # 3) Run the experiment:
     python csf_experiment.py
+
+# 4) Run analysis and generate CSF curve:
+    python analyze_csf.py
 ```
 
 **Output:**
